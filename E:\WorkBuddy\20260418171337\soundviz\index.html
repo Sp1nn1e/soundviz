@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundViz - 音频可视化引擎</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="visualizerCanvas"></canvas>
+    
+    <div id="welcome">
+        <h1>SoundViz</h1>
+        <p>音频可视化引擎 | 按 M 键启用麦克风 | 按 P 打开设置</p>
+        <p style="font-size: 14px; margin-top: 10px; opacity: 0.8;">
+            🎨 支持多效果叠加：按数字键 1-9 切换模式（最多3层叠加）<br>
+            💡 按住 Shift + 数字键 = 单独替换模式
+        </p>
+    </div>
+    
+    <!-- 顶部工具栏 -->
+    <div class="top-bar">
+        <button id="micBtn" class="btn">
+            🎤 麦克风
+        </button>
+        
+        <label class="btn" for="fileInput" id="fileBtn">
+            🎵 音频文件
+        </label>
+        <input type="file" id="fileInput" accept="audio/*">
+        <span id="fileName" class="file-name"></span>
+        
+        <label class="btn" for="imageInput" id="imageBtn">
+            🖼️ 上传图片
+        </label>
+        <input type="file" id="imageInput" accept="image/*">
+        <span id="imageName" class="file-name"></span>
+        
+        <button id="clearImageBtn" class="btn btn-icon" title="清除图片">
+            ✕
+        </button>
+
+        <button id="togglePanelBtn" class="btn btn-icon" title="切换设置面板">
+            ⚙️
+        </button>
+
+        <button id="playlistBtn" class="btn btn-icon" title="歌单">
+            🎶
+        </button>
+
+        <button id="fullscreenBtn" class="btn btn-icon" title="全屏">
+            ⛶
+        </button>
+    </div>
+    
+    <!-- 控制面板 -->
+    <div id="controlPanel" class="control-panel open">
+        <div class="panel-header">
+            <span>⚙️ 控制面板</span>
+            <button id="togglePanel" class="panel-close-btn" title="收起面板">▼</button>
+        </div>
+        <div class="panel-content">
+            
+            <div class="panel-section">
+                <div class="section-title">四季特效</div>
+                <div class="mode-grid">
+                    <button class="mode-btn" data-mode="spring">
+                        <span class="mode-icon">🌸</span>
+                        春天
+                    </button>
+                    <button class="mode-btn" data-mode="summer">
+                        <span class="mode-icon">☀️</span>
+                        夏天
+                    </button>
+                    <button class="mode-btn" data-mode="autumn">
+                        <span class="mode-icon">🍂</span>
+                        秋天
+                    </button>
+                    <button class="mode-btn" data-mode="winter">
+                        <span class="mode-icon">❄️</span>
+                        冬天
+                    </button>
+                    <button class="mode-btn" data-mode="daytime">
+                        <span class="mode-icon">🌤️</span>
+                        白天
+                    </button>
+                </div>
+            </div>
+
+            <!-- 可视化模式 -->
+            <div class="panel-section">
+                <div class="section-title">可视化模式</div>
+                <div class="mode-grid">
+                    <button class="mode-btn active" data-mode="waveform">
+                        <span class="mode-icon">〰️</span>
+                        波形
+                    </button>
+                    <button class="mode-btn" data-mode="bars">
+                        <span class="mode-icon">📊</span>
+                        频谱柱
+                    </button>
+                    <button class="mode-btn" data-mode="particles">
+                        <span class="mode-icon">✨</span>
+                        粒子
+                    </button>
+                    <button class="mode-btn" data-mode="circle">
+                        <span class="mode-icon">⭕</span>
+                        圆形
+                    </button>
+                    <button class="mode-btn" data-mode="dots">
+                        <span class="mode-icon">🔴</span>
+                        光点
+                    </button>
+                    <button class="mode-btn" data-mode="reactive">
+                        <span class="mode-icon">💥</span>
+                        反应式
+                    </button>
+                    <button class="mode-btn" data-mode="3dwave">
+                        <span class="mode-icon">🌊</span>
+                        3D波浪
+                    </button>
+                    <button class="mode-btn" data-mode="shapes">
+                        <span class="mode-icon">❤️</span>
+                        图案
+                    </button>
+                    <button class="mode-btn" data-mode="ancient">
+                        <span class="mode-icon">🏯</span>
+                        古建筑
+                    </button>
+                    <button class="mode-btn" data-mode="imagewave">
+                        <span class="mode-icon">〰️</span>
+                        图片波浪
+                    </button>
+                    <button class="mode-btn" data-mode="tiled">
+                        <span class="mode-icon">▦</span>
+                        平铺图案
+                    </button>
+                    <button class="mode-btn" data-mode="vortex">
+                        <span class="mode-icon">🌀</span>
+                        漩涡
+                    </button>
+
+                    <button class="mode-btn" data-mode="bouncingball">
+                        <span class="mode-icon">⚽</span>
+                        发光球
+                    </button>
+                    <button class="mode-btn" data-mode="runningstick">
+                        <span class="mode-icon">🏃</span>
+                        跑步
+                    </button>
+                </div>
+            </div>
+
+            <!-- 颜色主题 -->
+            <div class="panel-section">
+                <div class="section-title">颜色主题</div>
+                <div class="theme-grid">
+                    <button class="theme-btn theme-neon active" data-theme="neon" title="霓虹"></button>
+                    <button class="theme-btn theme-fire" data-theme="fire" title="火焰"></button>
+                    <button class="theme-btn theme-ocean" data-theme="ocean" title="海洋"></button>
+                    <button class="theme-btn theme-purple" data-theme="purple" title="紫色"></button>
+                    <button class="theme-btn theme-mono" data-theme="mono" title="黑白"></button>
+                    <button class="theme-btn" style="background: linear-gradient(135deg, #ff6b35 50%, #f7c59f 50%)" data-theme="sunset" title="日落"></button>
+                    <button class="theme-btn" style="background: linear-gradient(135deg, #00ff88 50%, #ff00ff 50%)" data-theme="cyber" title="赛博"></button>
+                    <button class="theme-btn" style="background: linear-gradient(135deg, #ffd700 50%, #ff4500 50%)" data-theme="gold" title="金色"></button>
+                </div>
+            </div>
+            
+            <!-- 参数调节 -->
+            <div class="panel-section">
+                <div class="section-title">参数调节</div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">灵敏度</span>
+                        <span class="slider-value" id="sensitivityValue">1.5</span>
+                    </div>
+                    <input type="range" id="sensitivity" min="0.5" max="3" step="0.1" value="1.5">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">光晕强度</span>
+                        <span class="slider-value" id="glowValue">20</span>
+                    </div>
+                    <input type="range" id="glow" min="0" max="50" step="1" value="20">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">拖尾效果</span>
+                        <span class="slider-value" id="blurValue">0</span>
+                    </div>
+                    <input type="range" id="blur" min="0" max="50" step="1" value="0">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">粒子速度</span>
+                        <span class="slider-value" id="speedValue">2.0</span>
+                    </div>
+                    <input type="range" id="speed" min="0.5" max="5" step="0.1" value="2">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">柱状图数量</span>
+                        <span class="slider-value" id="barCountValue">64</span>
+                    </div>
+                    <input type="range" id="barCount" min="16" max="256" step="8" value="64">
+                </div>
+            </div>
+            
+            <!-- 图片参数 -->
+            <div class="panel-section" id="imageParams">
+                <div class="section-title">图片效果</div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">图片缩放</span>
+                        <span class="slider-value" id="imageScaleValue">1.0</span>
+                    </div>
+                    <input type="range" id="imageScale" min="0.5" max="3" step="0.1" value="1">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">图片透明度</span>
+                        <span class="slider-value" id="imageOpacityValue">0.5</span>
+                    </div>
+                    <input type="range" id="imageOpacity" min="0.1" max="1" step="0.05" value="0.5">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">扭曲强度</span>
+                        <span class="slider-value" id="distortionValue">0.0</span>
+                    </div>
+                    <input type="range" id="distortion" min="0" max="1" step="0.05" value="0">
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">图片滤镜</span>
+                    </div>
+                    <select id="imageFilter" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff;">
+                        <option value="none">无</option>
+                        <option value="pulse">脉冲</option>
+                        <option value="glow">发光</option>
+                        <option value="ripple">涟漪</option>
+                    </select>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <span id="status">等待音频输入... | 上传图片体验更多效果</span>
+    </div>
+    
+    <!-- 播放控制条 -->
+    <div class="player-bar" id="playerBar">
+        <button id="playerCollapseBtn" class="collapse-btn" title="收起">▼</button>
+        <button id="rewindBtn" class="rewind-btn" title="后退5秒">⏪</button>
+        <button id="playPauseBtn" class="play-btn" title="播放/暂停">
+            ▶️
+        </button>
+        <button id="forwardBtn" class="forward-btn" title="前进5秒">⏩</button>
+        <div class="progress-container">
+            <span id="currentTime">0:00</span>
+            <input type="range" id="progressSlider" min="0" max="100" value="0">
+            <span id="totalTime">0:00</span>
+        </div>
+        <button id="stopBtn" class="stop-btn" title="停止">
+            ⏹️
+        </button>
+    </div>
+    
+    <!-- 播放条收起后的迷你按钮 -->
+    <button id="playerMiniBtn" class="player-mini-btn" title="显示播放控制 ▶️/⏸️">
+        ▶️
+    </button>
+
+    <!-- 歌单面板 -->
+    <div class="playlist-panel" id="playlistPanel">
+        <div class="playlist-header">
+            <span>🎶 歌单</span>
+            <button id="playlistCloseBtn" class="panel-close-btn" title="关闭">▼</button>
+        </div>
+        <div class="playlist-body">
+            <!-- 循环控制 -->
+            <div class="playlist-controls-top">
+                <button id="loopModeBtn" class="loop-btn" title="循环模式">
+                    🔁
+                </button>
+                <span id="loopModeLabel" class="loop-mode-label">单曲循环</span>
+                <button id="prevTrackBtn" class="nav-btn" title="上一首">⏮️</button>
+                <button id="nextTrackBtn" class="nav-btn" title="下一首">⏭️</button>
+            </div>
+            <!-- 添加歌曲按钮 -->
+            <div class="playlist-add-area">
+                <label for="playlistFileInput" class="btn" id="playlistAddBtn">
+                    ➕ 添加歌曲
+                </label>
+                <input type="file" id="playlistFileInput" accept="audio/*" multiple style="display:none">
+            </div>
+            <!-- 歌曲列表 -->
+            <div class="playlist-songs" id="playlistSongs">
+                <div class="playlist-empty">暂无歌曲，请添加</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 频率指示器 -->
+    <div class="freq-indicator" id="freqIndicator">
+        <div class="freq-header">
+            <span>频谱</span>
+            <button id="freqCollapseBtn" class="freq-collapse-btn" title="收起">▼</button>
+        </div>
+        <div class="freq-content">
+            <div class="freq-label">
+                <span>低频 Bass</span>
+                <span class="freq-value" id="bassValue">0</span>
+            </div>
+            <div class="freq-bar-bg">
+                <div class="freq-bar" id="bassBar" style="width: 0%"></div>
+            </div>
+            
+            <div class="freq-label">
+                <span>中频 Mid</span>
+                <span class="freq-value" id="midValue">0</span>
+            </div>
+            <div class="freq-bar-bg">
+                <div class="freq-bar" id="midBar" style="width: 0%"></div>
+            </div>
+            
+            <div class="freq-label">
+                <span>高频 Treble</span>
+                <span class="freq-value" id="trebleValue">0</span>
+            </div>
+            <div class="freq-bar-bg">
+                <div class="freq-bar" id="trebleBar" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手机模拟模式 -->
+    <div class="phone-simulator" id="phoneSimulator">
+        <div class="phone-screen" id="phoneScreen">
+            <!-- 顶部工具栏（手机内） -->
+            <div class="phone-toolbar">
+                <button class="phone-tool-btn" id="phoneMicBtn" title="麦克风">🎤</button>
+                <button class="phone-tool-btn" id="phoneFileBtn" title="添加音乐">🎵</button>
+                <button class="phone-tool-btn" id="phoneImageBtn" title="添加图片">🖼️</button>
+                <button class="phone-tool-btn" id="phonePlaylistBtn" title="歌单">📋</button>
+                <button class="phone-tool-btn" id="phoneSettingsBtn" title="设置">⚙️</button>
+            </div>
+            <!-- 隐藏的文件/图片输入 -->
+            <input type="file" id="phoneFileInput" accept="audio/*" multiple style="display:none">
+            <input type="file" id="phoneImageInput" accept="image/*" style="display:none">
+            <!-- 画布（手机内） -->
+            <canvas id="phoneCanvas"></canvas>
+            
+            <!-- 手机主控制面板（可展开） -->
+            <div class="phone-control-panel" id="phoneControlPanel">
+                <div class="phone-panel-header">
+                    <span>控制面板</span>
+                    <button id="phoneClosePanelBtn" class="panel-close-btn">▼</button>
+                </div>
+                <div class="phone-panel-content">
+                    <!-- 文件操作 -->
+                    <div class="phone-section-title">文件操作</div>
+                    <div class="phone-mode-row">
+                        <button class="phone-tool-btn-lg" id="phoneMicBtn2">🎤<span>麦克风</span></button>
+                        <button class="phone-tool-btn-lg" id="phoneFileBtn2">🎵<span>音乐</span></button>
+                        <button class="phone-tool-btn-lg" id="phoneImageBtn2">🖼️<span>图片</span></button>
+                    </div>
+                    <!-- 四季特效 -->
+                    <div class="phone-section-title">四季特效</div>
+                    <div class="phone-mode-row">
+                        <button class="phone-mode-btn" data-mode="spring">🌸</button>
+                        <button class="phone-mode-btn" data-mode="summer">☀️</button>
+                        <button class="phone-mode-btn" data-mode="autumn">🍂</button>
+                        <button class="phone-mode-btn" data-mode="winter">❄️</button>
+                        <button class="phone-mode-btn" data-mode="daytime">🌤️</button>
+                    </div>
+                    <!-- 可视化模式 -->
+                    <div class="phone-section-title">可视化模式</div>
+                    <div class="phone-mode-row phone-mode-scroll">
+                        <button class="phone-mode-btn" data-mode="waveform">〰️</button>
+                        <button class="phone-mode-btn" data-mode="bars">📊</button>
+                        <button class="phone-mode-btn" data-mode="particles">✨</button>
+                        <button class="phone-mode-btn" data-mode="circle">⭕</button>
+                        <button class="phone-mode-btn" data-mode="dots">🔴</button>
+                        <button class="phone-mode-btn" data-mode="reactive">💥</button>
+                        <button class="phone-mode-btn" data-mode="3dwave">🌊</button>
+                        <button class="phone-mode-btn" data-mode="shapes">❤️</button>
+                        <button class="phone-mode-btn" data-mode="ancient">🏯</button>
+                        <button class="phone-mode-btn" data-mode="runningstick">🏃</button>
+                        <button class="phone-mode-btn" data-mode="imagewave">🖼️</button>
+                        <button class="phone-mode-btn" data-mode="tiled">▦</button>
+                        <button class="phone-mode-btn" data-mode="vortex">🌀</button>
+                        <button class="phone-mode-btn" data-mode="bouncingball">⚽</button>
+                        <button class="phone-mode-btn" data-mode="spring">🔵</button>
+                    </div>
+                    <!-- 颜色主题 -->
+                    <div class="phone-section-title">颜色主题</div>
+                    <div class="phone-theme-row">
+                        <button class="phone-theme-btn theme-neon active" data-theme="neon"></button>
+                        <button class="phone-theme-btn theme-fire" data-theme="fire"></button>
+                        <button class="phone-theme-btn theme-ocean" data-theme="ocean"></button>
+                        <button class="phone-theme-btn theme-purple" data-theme="purple"></button>
+                        <button class="phone-theme-btn theme-mono" data-theme="mono"></button>
+                    </div>
+                    <!-- 参数调节 -->
+                    <div class="phone-section-title">参数调节</div>
+                    <div class="phone-slider-group">
+                        <span>灵敏度</span>
+                        <input type="range" id="phoneSensitivity" min="0.5" max="3" step="0.1" value="1.5">
+                    </div>
+                    <div class="phone-slider-group">
+                        <span>光晕</span>
+                        <input type="range" id="phoneGlow" min="0" max="50" step="1" value="20">
+                    </div>
+                    <div class="phone-slider-group">
+                        <span>速度</span>
+                        <input type="range" id="phoneSpeed" min="0.5" max="3" step="0.1" value="1.5">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 手机歌单面板（可展开） -->
+            <div class="phone-playlist-panel" id="phonePlaylistPanel">
+                <div class="phone-panel-header">
+                    <span>歌单</span>
+                    <button id="phoneClosePlaylistBtn" class="panel-close-btn">▼</button>
+                </div>
+                <div class="phone-playlist-content">
+                    <div class="phone-playlist-controls">
+                        <button class="phone-mode-btn" id="phoneLoopBtn" title="循环模式">🔁</button>
+                        <span id="phoneLoopLabel">列表循环</span>
+                        <button class="phone-mode-btn" id="phonePrevBtn">⏮</button>
+                        <button class="phone-mode-btn" id="phoneNextBtn">⏭</button>
+                    </div>
+                    <div class="phone-add-music">
+                        <button class="phone-tool-btn-lg" id="phoneAddMusicBtn">➕ 添加歌曲</button>
+                    </div>
+                    <div class="phone-playlist-songs" id="phonePlaylistSongs">
+                        <div class="phone-playlist-empty">暂无歌曲</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 播放栏（手机内） -->
+            <div class="phone-player-bar">
+                <button class="phone-mode-btn" id="phonePlayBtn">▶</button>
+                <div class="phone-progress-area">
+                    <span class="phone-time" id="phoneCurrentTime">0:00</span>
+                    <div class="phone-progress-wrapper">
+                        <input type="range" id="phoneProgress" min="0" max="100" value="0">
+                        <button class="phone-loop-inline" id="phoneLoopInlineBtn" title="循环模式">🔁</button>
+                    </div>
+                    <span class="phone-song-title" id="phoneSongTitle">未播放</span>
+                    <span class="phone-time" id="phoneTotalTime">0:00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手机模式切换按钮 -->
+    <button class="phone-toggle-btn" id="phoneToggleBtn" title="切换手机模式 (X)">
+        📱
+    </button>
+
+    <!-- 手机模式指示器 -->
+    <div class="phone-mode-indicator" id="phoneModeIndicator">
+        📱 手机模式 - 按 X 退出
+    </div>
+
+    <!-- 快捷键提示 -->
+    <div class="shortcuts">
+        <div><kbd>M</kbd> 麦克风</div>
+        <div><kbd>P</kbd> 设置面板</div>
+        <div><kbd>N</kbd> 歌单</div>
+        <div><kbd>F</kbd> 频谱收起</div>
+        <div><kbd>1-9</kbd> 叠加模式</div>
+        <div><kbd>Shift+1-9</kbd> 替换模式</div>
+        <div><kbd>Q/W/E</kbd> 春夏秋特效</div>
+        <div><kbd>R</kbd> 冬天/古建筑摇摆</div>
+        <div><kbd>T</kbd> 白天特效</div>
+        <div><kbd>U</kbd> 火柴人跑步</div>
+        <div><kbd>R/O/T</kbd> 古建筑效果</div>
+        <div><kbd>X</kbd> 手机模式</div>
+        <div><kbd>F11</kbd> 全屏</div>
+    </div>
+    
+    <script src="audio-engine.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="ui-controller.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
